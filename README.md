@@ -1,2 +1,2 @@
 # HT8-Mineria
-#HT8 Redes Neuronales Artificiales RNA
+## HT8 Redes Neuronales Artificiales RNA
