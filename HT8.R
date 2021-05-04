@@ -1,4 +1,4 @@
-setwd("C:/Users/Zephyrus/Documents/U/7mo Semestre/Mineria de Datos")
+setwd("C:/Users/Zephyrus/Documents/U/7mo Semestre/Mineria de Datos/HT8-Mineria")
 library(caret)
 library(rpart)
 library(e1071)
@@ -45,17 +45,33 @@ test<-houses[setdiff(rownames(houses),rownames(training)),]
 table(training$clasification)
 table(test$clasification)
 
+
+#Primero modelo de regresion, realizado con variables significativas tanto categoricas como cuantitativas, con un modelo de regresion lineal
+summary(training$SalePrice)
+modelo.nn2 <- nnet(SalePrice/755000~.,data = training[,1:9], size=2, rang=0.1, decay=5e-4, maxit=170, linout = TRUE)
+
+test$prediccion2<-predict(modelo.nn2, newdata = test[,1:8])*755000
+summary(test$prediccion2)
+
+mean((test$prediccion2 - test$SalePrice))
+
+plot(test$SalePrice, test$prediccion2,
+     main="Neural network predictions vs actual",
+     xlab="Actual")
+
 training$SalePrice<-NULL
 test$SalePrice<-NULL
+test$prediccion<-NULL
 
 #Primer modelo de classificacion, realizaco con con variables significativas tanto categoricas como cunatitativas y la funcion de activacion softmax
-modelo.nn2 <- nnet(clasification~.,data = training, size=2, rang=0.1, decay=5e-4, maxit=200)
 
-prediccion2 <- as.data.frame(predict(modelo.nn2, newdata = test[,1:8]))
-columnaMasAlta<-apply(prediccion2, 1, function(x) colnames(prediccion2)[which.max(x)])
-test$prediccion2<-columnaMasAlta
+modelo.nn2 <- nnet(clasification~.,data = training, size=2, rang=0.1, decay=5e-4, maxit=200) 
 
-cfm<-confusionMatrix(as.factor(test$prediccion2),test$clasification)
+prediccion <- as.data.frame(predict(modelo.nn2, newdata = test[,1:8]))
+columnaMasAlta<-apply(prediccion, 1, function(x) colnames(prediccion)[which.max(x)])
+test$prediccion<-columnaMasAlta
+
+cfm<-confusionMatrix(as.factor(test$prediccion),test$clasification)
 cfm
 
 
@@ -105,6 +121,20 @@ test<-houses[setdiff(rownames(houses),rownames(training)),]
 
 table(training$clasification)
 table(test$clasification)
+
+#Segundo modelo de regresion, realizado con la funcion Logistic de weka
+NB <- make_Weka_classifier("weka/classifiers/functions/GaussianProcesses")
+NB 
+WOW(NB)
+
+modelo.bp<-NB(SalePrice~., data=training[,1:23], control=Weka_control(), options=NULL)
+test$prediccionWeka<-predict(modelo.bp, newdata = test[,1:22])
+
+mean((test$prediccionWeka - test$SalePrice))
+
+plot(test$SalePrice, test$prediccionWeka,
+     main="Neural network predictions vs actual",
+     xlab="Actual")
 
 training$SalePrice<-NULL
 test$SalePrice<-NULL
